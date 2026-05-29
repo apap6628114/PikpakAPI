@@ -21,7 +21,8 @@ export class PikpakApi {
     private userId?: string;
     private axiosInstance: AxiosInstance;
     private pathIdCache: Record<string, FileRecord> = {};
-    private deviceId: String = "01J0NP4CPJR3R9XHGZZKTCFAET";
+    public deviceId: String = "01J0NP4CPJR3R9XHGZZKTCFAET";
+    private captchaToken?: string;
 
     /**
      * 创建一个 PikpakApi 实例
@@ -57,7 +58,12 @@ export class PikpakApi {
             "User-Agent":
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36",
             "Content-Type": "application/json; charset=utf-8",
+            "X-Device-Id": this.deviceId.toString(),
         };
+
+        if (this.captchaToken) {
+            headers["X-Captcha-Token"] = this.captchaToken;
+        }
 
         if (this.accessToken) {
             headers["Authorization"] = `Bearer ${this.accessToken}`;
@@ -99,6 +105,10 @@ export class PikpakApi {
             return jsonData;
         } catch (error: any) {
             if (axios.isAxiosError(error)) {
+                const errorData = error.response?.data;
+                if (errorData && errorData.error_description) {
+                    throw new PikpakException(errorData.error_description);
+                }
                 throw new PikpakException(error.message);
             } else {
                 throw error;
@@ -158,42 +168,55 @@ export class PikpakApi {
         const params = {
             client_id: PikpakApi.CLIENT_ID,
             action: "POST:/v1/auth/signin",
-            device_id: this.deviceId, // 注意：需要在类中定义 deviceId 属性
+            device_id: this.deviceId,
             meta: { email: this.username },
         };
-        return this.requestPost(url, params);
+        const result = await this.requestPost(url, params);
+        if (result && result.captcha_token) {
+            this.captchaToken = result.captcha_token;
+        }
+        return result;
     }
 
     /**
      * 使用用户名和密码登录 Pikpak
      */
     async login(): Promise<void> {
-        const loginUrl = `https://${PikpakApi.PIKPAK_USER_HOST}/v1/auth/token`;
-        const loginData = {
+        const loginUrl = `https://${PikpakApi.PIKPAK_USER_HOST}/v1/auth/signin`;
+
+        if (!this.captchaToken) {
+            await this.captchaInit();
+        }
+
+        const loginData: Record<string, string> = {
             client_id: PikpakApi.CLIENT_ID,
             client_secret: PikpakApi.CLIENT_SECRET,
-            password: this.password,
-            username: this.username,
-            grant_type: "password",
+            password: this.password as string,
+            username: this.username as string,
         };
+
+        if (this.captchaToken) {
+            loginData.captcha_token = this.captchaToken;
+        }
 
         try {
             const userInfo = await this.requestPost(loginUrl, loginData, {
-                "Content-Type": "application/x-www-form-urlencoded",
+                "Content-Type": "application/json",
             });
             this.accessToken = userInfo.access_token;
             this.refreshToken = userInfo.refresh_token;
             this.userId = userInfo.sub;
             this.encodeToken();
-        } catch (error) {
-            throw new PikpakException("登录失败，请检查用户名和密码");
+        } catch (error: any) {
+            const errorMsg = error?.message || "登录失败，请检查用户名和密码";
+            throw new PikpakException(errorMsg);
         }
     }
 
     /**
      * 刷新访问令牌
      */
-    private async refreshAccessToken(): Promise<void> {
+    async refreshAccessToken(): Promise<void> {
         const refreshUrl = `https://${PikpakApi.PIKPAK_USER_HOST}/v1/auth/token`;
         const refreshData = {
             client_id: PikpakApi.CLIENT_ID,
@@ -802,6 +825,14 @@ export class PikpakApi {
         const url = `https://${PikpakApi.PIKPAK_API_HOST}/vip/v1/quantity/list?type=transfer`;
         const result = await this.requestGet(url);
         return result;
+    }
+
+    /**
+     * 设置设备 ID
+     * @param deviceId 设备 ID
+     */
+    setDeviceId(deviceId: string): void {
+        this.deviceId = deviceId;
     }
 
 }
