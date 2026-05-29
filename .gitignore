@@ -1,6 +1,8 @@
 node_modules
-dist
 test
 *.js
+!dist/**/*.js
+*.d.ts
+!dist/**/*.d.ts
 main.ts
 test.md

@@ -1,0 +1,245 @@
+import { DownloadStatus } from "./enums";
+import "./model";
+/**
+ * PikPak API 客户端类
+ */
+export declare class PikpakApi {
+    private static readonly PIKPAK_API_HOST;
+    private static readonly PIKPAK_USER_HOST;
+    private static readonly CLIENT_ID;
+    private static readonly CLIENT_SECRET;
+    private username?;
+    private password?;
+    private encodedToken?;
+    private accessToken?;
+    private refreshToken?;
+    private userId?;
+    private axiosInstance;
+    private pathIdCache;
+    deviceId: String;
+    private captchaToken?;
+    /**
+     * 创建一个 PikpakApi 实例
+     * @param username Pikpak 用户名
+     * @param password Pikpak 密码
+     * @param encodedToken 已编码的包含访问令牌和刷新令牌的令牌字符串
+     * @param axiosClientArgs 可选的 Axios 配置参数
+     */
+    constructor(username?: string, password?: string, encodedToken?: string, axiosClientArgs?: Record<string, any>);
+    private getHeaders;
+    private makeRequest;
+    private requestGet;
+    private requestPost;
+    private requestPatch;
+    private requestDelete;
+    private decodeToken;
+    private encodeToken;
+    /**
+     * 初始化验证码
+     * @returns Promise<any> 包含初始化结果的 Promise
+     */
+    captchaInit(): Promise<any>;
+    /**
+     * 使用用户名和密码登录 Pikpak
+     */
+    login(): Promise<void>;
+    /**
+     * 刷新访问令牌
+     */
+    refreshAccessToken(): Promise<void>;
+    /**
+     * 获取用户信息
+     * @returns  用户信息对象
+     */
+    getUserInfo(): {
+        username: string | undefined;
+        userId: string | undefined;
+        accessToken: string | undefined;
+        refreshToken: string | undefined;
+        encodedToken: string | undefined;
+    };
+    /**
+     * 创建文件夹
+     * @param name 文件夹名称，默认为 "新建文件夹"
+     * @param parentId 父文件夹 ID，默认为根目录
+     * @returns Promise<any> 包含创建结果的 Promise
+     */
+    createFolder(name?: string, parentId?: string): Promise<any>;
+    /**
+     * 将文件或文件夹移动到回收站
+     * @param ids 要移动到回收站的文件或文件夹 ID 列表
+     * @returns Promise<any> 包含操作结果的 Promise
+     */
+    deleteToTrash(ids: string[]): Promise<any>;
+    /**
+     * 将文件或文件夹移出回收站
+     * @param ids 要移出回收站的文件或文件夹 ID 列表
+     * @returns Promise<any> 包含操作结果的 Promise
+     */
+    untrash(ids: string[]): Promise<any>;
+    /**
+     * 永久删除文件或文件夹
+     * @param ids 要永久删除的文件或文件夹 ID 列表
+     * @returns Promise<any> 包含操作结果的 Promise
+     */
+    deleteForever(ids: string[]): Promise<any>;
+    /**
+     * 离线下载文件
+     * @param fileUrl 文件链接
+     * @param parentId 父文件夹 ID，不传默认存储到 My Pack
+     * @param name 文件名，不传默认为文件链接的文件名
+     * @returns Promise<any> 包含操作结果的 Promise
+     */
+    offlineDownload(fileUrl: string, parentId?: string, name?: string): Promise<any>;
+    /**
+     * 获取离线下载列表
+     * @param size 每次请求的数量，默认为 10000
+     * @param nextPageToken 下一页的 page token
+     * @param phase 离线下载任务状态，默认为 ["PHASE_TYPE_RUNNING", "PHASE_TYPE_ERROR"]
+     *   支持的值：PHASE_TYPE_RUNNING, PHASE_TYPE_ERROR, PHASE_TYPE_COMPLETE, PHASE_TYPE_PENDING
+     * @returns Promise<any> 包含操作结果的 Promise
+     */
+    offlineList(size?: number, nextPageToken?: string, phase?: string[]): Promise<any>;
+    /**
+     * 获取离线下载任务状态
+     * @param taskId 离线下载任务 ID
+     * @param fileId 离线下载文件 ID
+     * @returns Promise<DownloadStatus> 表示下载状态的 Promise
+     */
+    getTaskStatus(taskId: string, fileId: string): Promise<DownloadStatus>;
+    /**
+     * 获取离线下载文件信息
+     * @param fileId 离线下载文件 ID
+     * @returns Promise<any> 包含操作结果的 Promise
+     */
+    offlineFileInfo(fileId: string): Promise<any>;
+    /**
+     * 获取文件列表
+     * @param size 每次请求的数量，默认为 所有
+     * @param parentId 父文件夹 ID，默认为 根目录
+     * @param nextPageToken 下一页的分页令牌
+     * @param additionalFilters 额外的过滤条件
+     * @returns Promise<FileList> 包含文件列表的 Promise
+     */
+    fileList(size?: number, parentId?: string, nextPageToken?: string, additionalFilters?: Record<string, any>): Promise<FileList>;
+    /**
+     * 获取最近添加事件列表
+     * @param size 每次请求的数量，默认为 100，设置为 0 则请求所有
+     * @param nextPageToken 下一页的 page token
+     * @returns Promise<any> 包含操作结果的 Promise
+     */
+    events(size?: number, nextPageToken?: string): Promise<any>;
+    /**
+     * 重试离线下载任务
+     * @param taskId 离线下载任务 ID
+     * @returns Promise<any> 包含操作结果的 Promise
+     * @throws {PikpakException} 重试离线下载任务失败时抛出异常
+     */
+    offlineTaskRetry(taskId: string): Promise<any>;
+    /**
+     * 根据任务 ID 删除任务
+     * @param taskIds 要删除的任务 ID 列表
+     * @param deleteFiles 是否同时删除文件，默认为 false
+     * @returns Promise<void> 表示操作完成的 Promise
+     * @throws {PikpakException} 删除任务失败时抛出异常
+     */
+    deleteTasks(taskIds: string[], deleteFiles?: boolean): Promise<void>;
+    /**
+     * 将形如 /path/a/b 的路径转换为 文件夹的id
+     * @param path 路径字符串
+     * @param create 是否创建不存在的文件夹
+     * @returns 文件夹 ID 列表
+     */
+    pathToId(path: string, create?: boolean): Promise<FileRecord[]>;
+    /**
+     * 批量移动文件
+     * @param ids 文件 ID 列表
+     * @param toParentId 目标文件夹 ID，默认为根目录
+     * @returns  API 响应数据
+     */
+    fileBatchMove(ids: string[], toParentId?: string): Promise<Record<string, any>>;
+    /**
+     * 批量复制文件
+     * @param ids 文件 ID 列表
+     * @param toParentId 目标文件夹 ID，默认为根目录
+     * @returns Pikpak API 返回的结果
+     */
+    fileBatchCopy(ids: string[], toParentId?: string): Promise<Record<string, any>>;
+    /**
+     * 根据路径移动或复制文件
+     * @param fromPaths 要移动或复制的文件路径列表
+     * @param toPath 移动或复制到的路径
+     * @param move 是否移动，默认为复制
+     * @param create 是否创建不存在的文件夹，默认为 false
+     * @returns Pikpak API 返回的结果
+     */
+    fileMoveOrCopyByPath(fromPaths: string[], toPath: string, move?: boolean, create?: boolean): Promise<any>;
+    /**
+     * 获取文件的下载链接
+     * @param fileId 文件 ID
+     * @returns 包含文件详细信息的对象
+     *
+     *  - 使用 `medias[0].link.url` 在流媒体服务或工具中以高速流式传输。
+     *  - 使用 `web_content_link` 下载文件。
+     */
+    getDownloadUrl(fileId: string): Promise<any>;
+    /**
+     * 重命名文件
+     * @param id 文件 ID
+     * @param newFileName 新的文件名
+     * @returns  更新后的文件信息
+     */
+    fileRename(id: string, newFileName: string): Promise<any>;
+    /**
+     * 批量给文件加星标
+     * @param ids 文件 ID 列表
+     * @returns Pikpak API 返回的结果
+     */
+    fileBatchStar(ids: string[]): Promise<any>;
+    /**
+     * 批量取消文件星标
+     * @param ids 文件 ID 列表
+     * @returns Pikpak API 返回的结果
+     */
+    fileBatchUnstar(ids: string[]): Promise<any>;
+    /**
+     * 获取已加星标的文件列表
+     * @param size 每次请求的数量，默认为 100
+     * @param nextPageToken 下一页的分页令牌，用于获取更多结果
+     * @returns Pikpak API 返回的结果，包含已加星标的文件列表
+     */
+    fileStarList(size?: number, nextPageToken?: string): Promise<any>;
+    /**
+     * 批量分享文件
+     * @param ids 文件 ID 列表
+     * @param needPassword 是否需要分享密码，默认为 false
+     * @param expirationDays 分享链接的有效天数，默认为 -1（永久有效）
+     * @returns Pikpak API 返回的结果，包含分享链接信息
+     */
+    fileBatchShare(ids: string[], needPassword?: boolean, expirationDays?: number): Promise<any>;
+    /**
+     * 获取当前用户的空间配额信息
+     * @returns Pikpak API 返回的结果，包含空间配额信息
+     */
+    getQuotaInfo(): Promise<any>;
+    /**
+     * 获取邀请码
+     * @returns Pikpak API 返回的结果，包含邀请码
+     */
+    getInviteCode(): Promise<string>;
+    /**
+     * 获取 VIP 信息
+     * @returns Pikpak API 返回的结果，包含 VIP 信息
+     */
+    getVipInfo(): Promise<any>;
+    /**
+     * 获取传输配额信息
+     * @returns Pikpak API 返回的结果，包含传输配额信息
+     */
+    getTransferQuota(): Promise<any>;
+    /**
+     * 设置设备 ID
+     * @param deviceId 设备 ID
+     */
+    setDeviceId(deviceId: string): void;
+}
