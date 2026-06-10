@@ -1,5 +1,6 @@
 node_modules
-test
+test/**
+!test/**/*.ts
 *.js
 !dist/**/*.js
 *.d.ts
@@ -7,3 +8,10 @@ test
 main.ts
 test.md
 config.json
+.pikpak-token.json
+
+# Test snapshot data (auto-generated HTTP responses)
+tests/data/
+
+# 允许 tests/ 中的 JS 文件被追踪（测试脚本）
+!tests/**/*.js

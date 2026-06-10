@@ -21,7 +21,7 @@ export class PikpakApi {
     private userId?: string;
     private axiosInstance: AxiosInstance;
     private pathIdCache: Record<string, FileRecord> = {};
-    public deviceId: String = "01J0NP4CPJR3R9XHGZZKTCFAET";
+    public deviceId: string = "01J0NP4CPJR3R9XHGZZKTCFAET";
     private captchaToken?: string;
 
     /**
@@ -345,13 +345,13 @@ export class PikpakApi {
      * @param nextPageToken 下一页的 page token
      * @param phase 离线下载任务状态，默认为 ["PHASE_TYPE_RUNNING", "PHASE_TYPE_ERROR"]
      *   支持的值：PHASE_TYPE_RUNNING, PHASE_TYPE_ERROR, PHASE_TYPE_COMPLETE, PHASE_TYPE_PENDING
-     * @returns Promise<any> 包含操作结果的 Promise
+     * @returns {Promise<TaskListResponse>} 包含任务列表的响应
      */
     async offlineList(
         size = 10000,
         nextPageToken?: string,
         phase: string[] = ['PHASE_TYPE_RUNNING', 'PHASE_TYPE_ERROR']
-    ): Promise<any> {
+    ): Promise<TaskListResponse> {
         const url = `https://${PikpakApi.PIKPAK_API_HOST}/drive/v1/tasks`;
         const data = {
             type: 'offline',
@@ -440,9 +440,9 @@ export class PikpakApi {
      * 获取最近添加事件列表
      * @param size 每次请求的数量，默认为 100，设置为 0 则请求所有
      * @param nextPageToken 下一页的 page token
-     * @returns Promise<any> 包含操作结果的 Promise
+     * @returns {Promise<EventsResponse>} 包含事件列表的响应
      */
-    async events(size = 100, nextPageToken?: string): Promise<any> {
+    async events(size = 100, nextPageToken?: string): Promise<EventsResponse> {
         const url = `https://${PikpakApi.PIKPAK_API_HOST}/drive/v1/events`;
         const data = {
             thumbnail_size: 'SIZE_MEDIUM',
@@ -786,9 +786,9 @@ export class PikpakApi {
 
     /**
      * 获取当前用户的空间配额信息
-     * @returns Pikpak API 返回的结果，包含空间配额信息
+     * @returns {Promise<AboutResponse>} 包含空间配额和用量的响应
      */
-    async getQuotaInfo(): Promise<any> {
+    async getQuotaInfo(): Promise<AboutResponse> {
         const result = await this.requestGet(
             `https://${PikpakApi.PIKPAK_API_HOST}/drive/v1/about`
         );
@@ -797,7 +797,7 @@ export class PikpakApi {
 
     /**
      * 获取邀请码
-     * @returns Pikpak API 返回的结果，包含邀请码
+     * @returns {Promise<string>} 邀请码字符串
      */
     async getInviteCode(): Promise<string> {
         const result = await this.requestGet(
@@ -808,9 +808,9 @@ export class PikpakApi {
 
     /**
      * 获取 VIP 信息
-     * @returns Pikpak API 返回的结果，包含 VIP 信息
+     * @returns {Promise<VipResponse>} 包含 VIP 类型、过期时间等信息的响应
      */
-    async getVipInfo(): Promise<any> {
+    async getVipInfo(): Promise<VipResponse> {
         const result = await this.requestGet(
             `https://${PikpakApi.PIKPAK_API_HOST}/drive/v1/privilege/vip`
         );
@@ -819,9 +819,9 @@ export class PikpakApi {
 
     /**
      * 获取传输配额信息
-     * @returns Pikpak API 返回的结果，包含传输配额信息
+     * @returns {Promise<TransferQuotaResponse>} 包含离线下载、上传、下载等传输配额信息的响应
      */
-    async getTransferQuota(): Promise<any> {
+    async getTransferQuota(): Promise<TransferQuotaResponse> {
         const url = `https://${PikpakApi.PIKPAK_API_HOST}/vip/v1/quantity/list?type=transfer`;
         const result = await this.requestGet(url);
         return result;

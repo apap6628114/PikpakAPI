@@ -16,7 +16,7 @@ export declare class PikpakApi {
     private userId?;
     private axiosInstance;
     private pathIdCache;
-    deviceId: String;
+    deviceId: string;
     private captchaToken?;
     /**
      * 创建一个 PikpakApi 实例
@@ -97,9 +97,9 @@ export declare class PikpakApi {
      * @param nextPageToken 下一页的 page token
      * @param phase 离线下载任务状态，默认为 ["PHASE_TYPE_RUNNING", "PHASE_TYPE_ERROR"]
      *   支持的值：PHASE_TYPE_RUNNING, PHASE_TYPE_ERROR, PHASE_TYPE_COMPLETE, PHASE_TYPE_PENDING
-     * @returns Promise<any> 包含操作结果的 Promise
+     * @returns {Promise<TaskListResponse>} 包含任务列表的响应
      */
-    offlineList(size?: number, nextPageToken?: string, phase?: string[]): Promise<any>;
+    offlineList(size?: number, nextPageToken?: string, phase?: string[]): Promise<TaskListResponse>;
     /**
      * 获取离线下载任务状态
      * @param taskId 离线下载任务 ID
@@ -126,9 +126,9 @@ export declare class PikpakApi {
      * 获取最近添加事件列表
      * @param size 每次请求的数量，默认为 100，设置为 0 则请求所有
      * @param nextPageToken 下一页的 page token
-     * @returns Promise<any> 包含操作结果的 Promise
+     * @returns {Promise<EventsResponse>} 包含事件列表的响应
      */
-    events(size?: number, nextPageToken?: string): Promise<any>;
+    events(size?: number, nextPageToken?: string): Promise<EventsResponse>;
     /**
      * 重试离线下载任务
      * @param taskId 离线下载任务 ID
@@ -219,24 +219,24 @@ export declare class PikpakApi {
     fileBatchShare(ids: string[], needPassword?: boolean, expirationDays?: number): Promise<any>;
     /**
      * 获取当前用户的空间配额信息
-     * @returns Pikpak API 返回的结果，包含空间配额信息
+     * @returns {Promise<AboutResponse>} 包含空间配额和用量的响应
      */
-    getQuotaInfo(): Promise<any>;
+    getQuotaInfo(): Promise<AboutResponse>;
     /**
      * 获取邀请码
-     * @returns Pikpak API 返回的结果，包含邀请码
+     * @returns {Promise<string>} 邀请码字符串
      */
     getInviteCode(): Promise<string>;
     /**
      * 获取 VIP 信息
-     * @returns Pikpak API 返回的结果，包含 VIP 信息
+     * @returns {Promise<VipResponse>} 包含 VIP 类型、过期时间等信息的响应
      */
-    getVipInfo(): Promise<any>;
+    getVipInfo(): Promise<VipResponse>;
     /**
      * 获取传输配额信息
-     * @returns Pikpak API 返回的结果，包含传输配额信息
+     * @returns {Promise<TransferQuotaResponse>} 包含离线下载、上传、下载等传输配额信息的响应
      */
-    getTransferQuota(): Promise<any>;
+    getTransferQuota(): Promise<TransferQuotaResponse>;
     /**
      * 设置设备 ID
      * @param deviceId 设备 ID
