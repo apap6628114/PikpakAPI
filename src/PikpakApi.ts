@@ -7,21 +7,35 @@ import axios, { AxiosInstance } from "axios";
  * PikPak API 客户端类
  */
 export class PikpakApi {
+    /** PikPak API 驱动服务基础地址 */
     private static readonly PIKPAK_API_HOST = "api-drive.mypikpak.com";
+    /** PikPak 用户认证服务基础地址 */
     private static readonly PIKPAK_USER_HOST = "user.mypikpak.com";
 
+    /** OAuth 客户端 ID */
     private static readonly CLIENT_ID = "YNxT9w7GMdWvEOKa";
+    /** OAuth 客户端密钥 */
     private static readonly CLIENT_SECRET = "dbw2OtmVEeuUvIptb1Coyg";
 
+    /** Pikpak 用户名 */
     private username?: string;
+    /** Pikpak 密码 */
     private password?: string;
+    /** 编码后的令牌字符串（Base64 编码的 access_token 和 refresh_token） */
     private encodedToken?: string;
+    /** 访问令牌 */
     private accessToken?: string;
+    /** 刷新令牌 */
     private refreshToken?: string;
+    /** 用户 ID */
     private userId?: string;
+    /** Axios HTTP 客户端实例 */
     private axiosInstance: AxiosInstance;
+    /** 路径到文件夹 ID 的缓存映射 */
     private pathIdCache: Record<string, FileRecord> = {};
+    /** 设备 ID */
     public deviceId: string = "01J0NP4CPJR3R9XHGZZKTCFAET";
+    /** 验证码令牌，用于人机验证 */
     private captchaToken?: string;
 
     /**
@@ -53,6 +67,11 @@ export class PikpakApi {
         }
     }
 
+    /**
+     * 构建 HTTP 请求头
+     * @param accessToken - 可选的访问令牌，用于覆盖当前实例的令牌
+     * @returns 包含认证信息、设备标识和内容类型的请求头对象
+     */
     private getHeaders(accessToken?: string): Record<string, string> {
         const headers: Record<string, string> = {
             "User-Agent":
@@ -74,6 +93,17 @@ export class PikpakApi {
         return headers;
     }
 
+    /**
+     * 发起 HTTP 请求，自动处理令牌刷新和错误响应
+     * @param method - HTTP 请求方法
+     * @param url - 请求 URL
+     * @param data - 请求体数据（可选）
+     * @param params - URL 查询参数（可选）
+     * @param headers - 自定义请求头（可选），不传则使用默认头
+     * @param retry - 内部重试计数器，首次调用无需传入
+     * @returns API 响应的 JSON 数据
+     * @throws {PikpakException} 请求失败或 API 返回错误时抛出
+     */
     private async makeRequest(
         method: "get" | "post" | "patch" | "delete",
         url: string,
@@ -116,10 +146,23 @@ export class PikpakApi {
         }
     }
 
+    /**
+     * 发送 GET 请求
+     * @param url - 请求 URL
+     * @param params - URL 查询参数
+     * @returns API 响应的 JSON 数据
+     */
     private async requestGet(url: string, params?: any): Promise<any> {
         return this.makeRequest("get", url, undefined, params);
     }
 
+    /**
+     * 发送 POST 请求
+     * @param url - 请求 URL
+     * @param data - 请求体数据
+     * @param headers - 自定义请求头
+     * @returns API 响应的 JSON 数据
+     */
     private async requestPost(
         url: string,
         data?: any,
@@ -128,10 +171,23 @@ export class PikpakApi {
         return this.makeRequest("post", url, data, undefined, headers);
     }
 
+    /**
+     * 发送 PATCH 请求
+     * @param url - 请求 URL
+     * @param data - 请求体数据
+     * @returns API 响应的 JSON 数据
+     */
     private async requestPatch(url: string, data?: any): Promise<any> {
         return this.makeRequest("patch", url, data);
     }
 
+    /**
+     * 发送 DELETE 请求
+     * @param url - 请求 URL
+     * @param params - URL 查询参数
+     * @param data - 请求体数据
+     * @returns API 响应的 JSON 数据
+     */
     private async requestDelete(
         url: string,
         params?: any,
@@ -140,6 +196,10 @@ export class PikpakApi {
         return this.makeRequest("delete", url, data, params);
     }
 
+    /**
+     * 解码 Base64 编码的令牌字符串，解析出 access_token 和 refresh_token
+     * @throws {PikpakException} 令牌字符串无效时抛出
+     */
     private decodeToken(): void {
         try {
             const decodedData: TokenData = JSON.parse(
@@ -152,6 +212,9 @@ export class PikpakApi {
         }
     }
 
+    /**
+     * 将当前 access_token 和 refresh_token 编码为 Base64 字符串
+     */
     private encodeToken(): void {
         const tokenData: TokenData = {
             access_token: this.accessToken as string,
@@ -180,6 +243,8 @@ export class PikpakApi {
 
     /**
      * 使用用户名和密码登录 Pikpak
+     * @returns 无返回值
+     * @throws {PikpakException} 登录失败时抛出
      */
     async login(): Promise<void> {
         const loginUrl = `https://${PikpakApi.PIKPAK_USER_HOST}/v1/auth/signin`;
@@ -215,6 +280,8 @@ export class PikpakApi {
 
     /**
      * 刷新访问令牌
+     * @returns 无返回值
+     * @throws {PikpakException} 刷新令牌失败时抛出
      */
     async refreshAccessToken(): Promise<void> {
         const refreshUrl = `https://${PikpakApi.PIKPAK_USER_HOST}/v1/auth/token`;
@@ -687,9 +754,10 @@ export class PikpakApi {
 
     /**
      * 重命名文件
-     * @param id 文件 ID
-     * @param newFileName 新的文件名
-     * @returns  更新后的文件信息
+     * @param id - 文件 ID
+     * @param newFileName - 新的文件名
+     * @returns 更新后的文件信息
+     * @throws {PikpakException} 文件重命名失败时抛出
      */
     async fileRename(id: string, newFileName: string): Promise<any> {
         const data = {
