@@ -66,8 +66,8 @@ export interface DriveFile {
   links: Record<string, unknown>;
   /** 文件当前阶段状态 */
   phase: FilePhase;
-  /** 文件审计信息（文件夹为 null） */
-  audit: AuditInfo | null;
+  /** 文件审计信息（文件夹或无审计信息的文件完全省略此字段） */
+  audit?: AuditInfo | null;
   /** 文件媒体信息列表 */
   medias: unknown[];
   /** 是否在回收站中 */
@@ -141,8 +141,8 @@ export interface FileRecord {
   id: string;
   /** 文件夹/文件名称 */
   name: string;
-  /** 资源类型："folder" 表示文件夹，"file" 表示文件 */
-  fileType: string;
+  /** 资源类型，"folder" 表示文件夹，"file" 表示文件 */
+  fileType: "folder" | "file";
 }
 
 // ============================================================
@@ -151,8 +151,8 @@ export interface FileRecord {
 
 /** 云盘配额明细 */
 export interface Quota {
-  /** 配额类型，固定为 "drive#quota" */
-  kind: DriveKind.Quota;
+  /** 配额类型，主配额为 "drive#quota"，子配额（如 cloud_download）可能为空字符串 */
+  kind: string;
   /** 总上限（字节），使用 string 避免大数精度丢失 */
   limit: string;
   /** 已用量（字节），使用 string 避免大数精度丢失 */
@@ -216,8 +216,8 @@ export interface VipResponse {
 
 /** 传输配额单项明细 */
 export interface TransferQuotaDetail {
-  /** 配额说明信息 */
-  info: string;
+  /** 配额说明信息（transfer 摘要层级存在，base 详情层级可能缺失） */
+  info?: string;
   /** 总配额度（条数或字节数，取决于所处层级） */
   total_assets: number;
   /** 已使用量 */
@@ -278,7 +278,7 @@ export interface TransferQuotaResponse {
  */
 export interface ReferenceResource {
   /** 资源类型标识，固定为 "type.googleapis.com/drive.ReferenceFile" */
-  "@type": string;
+  "@type": "type.googleapis.com/drive.ReferenceFile";
   /** 资源类型 */
   kind: DriveKind;
   /** 文件 ID */
