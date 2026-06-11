@@ -1,6 +1,6 @@
 import { DownloadStatus } from "./enums";
 import { PikpakException } from "./PikpakException";
-import "./model"
+import type { FileRecord, TokenData, TaskListResponse, FileList, EventsResponse, AboutResponse, VipResponse, TransferQuotaResponse } from "./model"
 import axios, { AxiosInstance } from "axios";
 
 /**

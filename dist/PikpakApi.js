@@ -15,7 +15,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PikpakApi = void 0;
 const enums_1 = require("./enums");
 const PikpakException_1 = require("./PikpakException");
-require("./model");
 const axios_1 = __importDefault(require("axios"));
 /**
  * PikPak API 客户端类
@@ -29,7 +28,9 @@ class PikpakApi {
      * @param axiosClientArgs 可选的 Axios 配置参数
      */
     constructor(username, password, encodedToken, axiosClientArgs = {}) {
+        /** 路径到文件夹 ID 的缓存映射 */
         this.pathIdCache = {};
+        /** 设备 ID */
         this.deviceId = "01J0NP4CPJR3R9XHGZZKTCFAET";
         this.username = username;
         this.password = password;
@@ -45,6 +46,11 @@ class PikpakApi {
             throw new PikpakException_1.PikpakException("必须提供用户名和密码，或者已编码的令牌字符串");
         }
     }
+    /**
+     * 构建 HTTP 请求头
+     * @param accessToken - 可选的访问令牌，用于覆盖当前实例的令牌
+     * @returns 包含认证信息、设备标识和内容类型的请求头对象
+     */
     getHeaders(accessToken) {
         const headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36",
@@ -62,6 +68,17 @@ class PikpakApi {
         }
         return headers;
     }
+    /**
+     * 发起 HTTP 请求，自动处理令牌刷新和错误响应
+     * @param method - HTTP 请求方法
+     * @param url - 请求 URL
+     * @param data - 请求体数据（可选）
+     * @param params - URL 查询参数（可选）
+     * @param headers - 自定义请求头（可选），不传则使用默认头
+     * @param retry - 内部重试计数器，首次调用无需传入
+     * @returns API 响应的 JSON 数据
+     * @throws {PikpakException} 请求失败或 API 返回错误时抛出
+     */
     makeRequest(method_1, url_1, data_1, params_1, headers_1) {
         return __awaiter(this, arguments, void 0, function* (method, url, data, params, headers, retry = 0) {
             var _a;
@@ -99,26 +116,56 @@ class PikpakApi {
             }
         });
     }
+    /**
+     * 发送 GET 请求
+     * @param url - 请求 URL
+     * @param params - URL 查询参数
+     * @returns API 响应的 JSON 数据
+     */
     requestGet(url, params) {
         return __awaiter(this, void 0, void 0, function* () {
             return this.makeRequest("get", url, undefined, params);
         });
     }
+    /**
+     * 发送 POST 请求
+     * @param url - 请求 URL
+     * @param data - 请求体数据
+     * @param headers - 自定义请求头
+     * @returns API 响应的 JSON 数据
+     */
     requestPost(url, data, headers) {
         return __awaiter(this, void 0, void 0, function* () {
             return this.makeRequest("post", url, data, undefined, headers);
         });
     }
+    /**
+     * 发送 PATCH 请求
+     * @param url - 请求 URL
+     * @param data - 请求体数据
+     * @returns API 响应的 JSON 数据
+     */
     requestPatch(url, data) {
         return __awaiter(this, void 0, void 0, function* () {
             return this.makeRequest("patch", url, data);
         });
     }
+    /**
+     * 发送 DELETE 请求
+     * @param url - 请求 URL
+     * @param params - URL 查询参数
+     * @param data - 请求体数据
+     * @returns API 响应的 JSON 数据
+     */
     requestDelete(url, params, data) {
         return __awaiter(this, void 0, void 0, function* () {
             return this.makeRequest("delete", url, data, params);
         });
     }
+    /**
+     * 解码 Base64 编码的令牌字符串，解析出 access_token 和 refresh_token
+     * @throws {PikpakException} 令牌字符串无效时抛出
+     */
     decodeToken() {
         try {
             const decodedData = JSON.parse(atob(this.encodedToken));
@@ -129,6 +176,9 @@ class PikpakApi {
             throw new PikpakException_1.PikpakException("无效的已编码令牌字符串");
         }
     }
+    /**
+     * 将当前 access_token 和 refresh_token 编码为 Base64 字符串
+     */
     encodeToken() {
         const tokenData = {
             access_token: this.accessToken,
@@ -158,6 +208,8 @@ class PikpakApi {
     }
     /**
      * 使用用户名和密码登录 Pikpak
+     * @returns 无返回值
+     * @throws {PikpakException} 登录失败时抛出
      */
     login() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -191,6 +243,8 @@ class PikpakApi {
     }
     /**
      * 刷新访问令牌
+     * @returns 无返回值
+     * @throws {PikpakException} 刷新令牌失败时抛出
      */
     refreshAccessToken() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -625,9 +679,10 @@ class PikpakApi {
     }
     /**
      * 重命名文件
-     * @param id 文件 ID
-     * @param newFileName 新的文件名
-     * @returns  更新后的文件信息
+     * @param id - 文件 ID
+     * @param newFileName - 新的文件名
+     * @returns 更新后的文件信息
+     * @throws {PikpakException} 文件重命名失败时抛出
      */
     fileRename(id, newFileName) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -753,7 +808,11 @@ class PikpakApi {
     }
 }
 exports.PikpakApi = PikpakApi;
+/** PikPak API 驱动服务基础地址 */
 PikpakApi.PIKPAK_API_HOST = "api-drive.mypikpak.com";
+/** PikPak 用户认证服务基础地址 */
 PikpakApi.PIKPAK_USER_HOST = "user.mypikpak.com";
+/** OAuth 客户端 ID */
 PikpakApi.CLIENT_ID = "YNxT9w7GMdWvEOKa";
+/** OAuth 客户端密钥 */
 PikpakApi.CLIENT_SECRET = "dbw2OtmVEeuUvIptb1Coyg";
